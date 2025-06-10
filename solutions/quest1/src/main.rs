@@ -86,17 +86,15 @@ fn eni(n: usize, exp: usize, mmod: usize) -> usize {
     list.parse().unwrap()
 }
 
-fn trunc_eni(n: usize, mut exp: usize, mmod: usize) -> usize {
+fn trunc_eni(n: usize, exp: usize, mmod: usize) -> usize {
     let mut score = if exp > 5 {
-        let rest = exp - 5;
-        exp = 5;
-        power_mod(1, n, rest, mmod)
+        power_mod(1, n, exp - 5, mmod)
     } else {
         1
     };
 
     let mut list = String::new();
-    for _ in 0..exp {
+    for _ in 0..exp.min(5) {
         score = (score * n) % mmod;
         list = format!("{score}{list}");
     }
