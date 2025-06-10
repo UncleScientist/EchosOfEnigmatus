@@ -1,5 +1,5 @@
 use aoclib::power_mod;
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 fn main() {
     println!("Quest 1: EniCode");
@@ -26,6 +26,20 @@ fn main() {
             .max()
             .unwrap()
     );
+
+    let lines = aoclib::read_lines("input3.txt");
+    let entries = lines
+        .iter()
+        .map(|line| line.parse::<Entry>().unwrap())
+        .collect::<Vec<_>>();
+    println!(
+        "  part 3 = {}",
+        entries
+            .iter()
+            .map(|entry| entry.loop_calculate())
+            .max()
+            .unwrap()
+    );
 }
 
 #[derive(Debug)]
@@ -48,6 +62,12 @@ impl Entry {
         trunc_eni(self.a, self.x, self.m)
             + trunc_eni(self.b, self.y, self.m)
             + trunc_eni(self.c, self.z, self.m)
+    }
+
+    fn loop_calculate(&self) -> usize {
+        loop_eni(self.a, self.x, self.m)
+            + loop_eni(self.b, self.y, self.m)
+            + loop_eni(self.c, self.z, self.m)
     }
 }
 
@@ -101,6 +121,29 @@ fn trunc_eni(n: usize, exp: usize, mmod: usize) -> usize {
     list.parse().unwrap()
 }
 
+fn loop_eni(n: usize, exp: usize, mmod: usize) -> usize {
+    let mut score = 1;
+    let mut sum = 0;
+    let mut visited = HashMap::<usize, (usize, usize)>::new(); // (steps, running_total)
+
+    let mut step = 0;
+    while step < exp {
+        score = (score * n) % mmod;
+        sum += score;
+        step += 1;
+        if let Some((prev_step, prev_sum)) = visited.get(&score) {
+            let delta_steps = step - prev_step;
+            let delta_sum = sum - prev_sum;
+            let amount = (exp - step) / delta_steps;
+            sum += delta_sum * amount;
+            step += delta_steps * amount;
+        }
+        visited.insert(score, (step, sum));
+    }
+
+    sum
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -151,6 +194,31 @@ mod test {
             entries
                 .iter()
                 .map(|entry| entry.trunc_calculate())
+                .max()
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn test_loop1() {
+        assert_eq!(132000, loop_eni(4, 3000, 110));
+        assert_eq!(559940, loop_eni(4, 14000, 120));
+        assert_eq!(1200000, loop_eni(9, 16000, 150));
+        assert_eq!(1279880, loop_eni(8, 16000, 160));
+    }
+
+    #[test]
+    fn test_part3() {
+        let lines = aoclib::read_lines("test3_2.txt");
+        let entries = lines
+            .iter()
+            .map(|line| line.parse::<Entry>().unwrap())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            7276515438396,
+            entries
+                .iter()
+                .map(|entry| entry.loop_calculate())
                 .max()
                 .unwrap()
         );
