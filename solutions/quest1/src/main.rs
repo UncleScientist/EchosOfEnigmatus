@@ -1,3 +1,4 @@
+use aoclib::power_mod;
 use std::str::FromStr;
 
 fn main() {
@@ -10,6 +11,20 @@ fn main() {
     println!(
         "  part 1 = {}",
         entries.iter().map(|entry| entry.calculate()).max().unwrap()
+    );
+
+    let lines = aoclib::read_lines("input2.txt");
+    let entries = lines
+        .iter()
+        .map(|line| line.parse::<Entry>().unwrap())
+        .collect::<Vec<_>>();
+    println!(
+        "  part 2 = {}",
+        entries
+            .iter()
+            .map(|entry| entry.trunc_calculate())
+            .max()
+            .unwrap()
     );
 }
 
@@ -27,6 +42,12 @@ struct Entry {
 impl Entry {
     fn calculate(&self) -> usize {
         eni(self.a, self.x, self.m) + eni(self.b, self.y, self.m) + eni(self.c, self.z, self.m)
+    }
+
+    fn trunc_calculate(&self) -> usize {
+        trunc_eni(self.a, self.x, self.m)
+            + trunc_eni(self.b, self.y, self.m)
+            + trunc_eni(self.c, self.z, self.m)
     }
 }
 
@@ -59,9 +80,25 @@ fn eni(n: usize, exp: usize, mmod: usize) -> usize {
     let mut list = String::new();
     let mut score = 1;
     for _ in 0..exp {
-        score *= n;
-        let rem = score % mmod;
-        list = format!("{rem}{list}");
+        score = (score * n) % mmod;
+        list = format!("{score}{list}");
+    }
+    list.parse().unwrap()
+}
+
+fn trunc_eni(n: usize, mut exp: usize, mmod: usize) -> usize {
+    let mut score = if exp > 5 {
+        let rest = exp - 5;
+        exp = 5;
+        power_mod(1, n, rest, mmod)
+    } else {
+        1
+    };
+
+    let mut list = String::new();
+    for _ in 0..exp {
+        score = (score * n) % mmod;
+        list = format!("{score}{list}");
     }
     list.parse().unwrap()
 }
@@ -92,5 +129,32 @@ mod test {
     fn test_line3() {
         let entry: Entry = "A=5 B=9 C=6 X=8 Y=6 Z=8 M=14".parse().unwrap();
         assert_eq!(11611972920, entry.calculate());
+    }
+
+    #[test]
+    fn test_trunc_eni_1() {
+        assert_eq!(10510510, trunc_eni(5, 6, 15));
+    }
+
+    #[test]
+    fn test_trunc_eni_2() {
+        assert_eq!(0, trunc_eni(8, 6, 16));
+    }
+
+    #[test]
+    fn test_part2() {
+        let lines = aoclib::read_lines("test2_2.txt");
+        let entries = lines
+            .iter()
+            .map(|line| line.parse::<Entry>().unwrap())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            1507702060886,
+            entries
+                .iter()
+                .map(|entry| entry.trunc_calculate())
+                .max()
+                .unwrap()
+        );
     }
 }
