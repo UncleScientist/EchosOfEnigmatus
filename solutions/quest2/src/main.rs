@@ -1,6 +1,21 @@
+use std::path::Path;
+
 fn main() {
     println!("Quest 2: Tangled Trees");
-    let lines = aoclib::read_lines("everybody_codes_e1_q02_p1.txt");
+
+    let (left_tree, right_tree) = parse_and_build("everybody_codes_e1_q02_p1.txt");
+    let left = left_tree.widest_level();
+    let right = right_tree.widest_level();
+    println!("  part 1 = {left}{right}");
+
+    // let (left_tree, right_tree) = parse_and_build("everybody_codes_e1_q02_p2.txt");
+    // let left = left_tree.widest_level();
+    // let right = right_tree.widest_level();
+    // println!("  part 2 = {left}{right}");
+}
+
+fn parse_and_build<P: AsRef<Path>>(path: P) -> (VecTree, VecTree) {
+    let lines = aoclib::read_lines(path);
     // let lines = aoclib::read_lines("test1_1.txt");
 
     let mut left_tree = VecTree::default();
@@ -21,17 +36,7 @@ fn main() {
         right_tree.add(right_node);
     }
 
-    let left = left_tree
-        .levels()
-        .into_iter()
-        .max_by(|a, b| a.len().cmp(&b.len()))
-        .unwrap();
-    let right = right_tree
-        .levels()
-        .into_iter()
-        .max_by(|a, b| a.len().cmp(&b.len()))
-        .unwrap();
-    println!("  part 1 = {left}{right}");
+    (left_tree, right_tree)
 }
 
 fn rank_and_symbol(s: &str) -> (usize, char) {
@@ -94,6 +99,13 @@ impl VecTree {
         } else {
             self.vec[pos] = Some(node);
         }
+    }
+
+    fn widest_level(&self) -> String {
+        self.levels()
+            .into_iter()
+            .max_by(|a, b| a.len().cmp(&b.len()))
+            .unwrap()
     }
 
     fn levels(&self) -> Vec<String> {
