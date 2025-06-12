@@ -8,10 +8,11 @@ fn main() {
     let right = right_tree.widest_level();
     println!("  part 1 = {left}{right}");
 
-    // let (left_tree, right_tree) = parse_and_build("everybody_codes_e1_q02_p2.txt");
-    // let left = left_tree.widest_level();
-    // let right = right_tree.widest_level();
-    // println!("  part 2 = {left}{right}");
+    let (left_tree, right_tree) = parse_and_build("everybody_codes_e1_q02_p2.txt");
+    // let (left_tree, right_tree) = parse_and_build("test2_1.txt");
+    let left = left_tree.widest_level();
+    let right = right_tree.widest_level();
+    println!("  part 2 = {left}{right}");
 }
 
 fn parse_and_build<P: AsRef<Path>>(path: P) -> (VecTree, VecTree) {
@@ -23,17 +24,31 @@ fn parse_and_build<P: AsRef<Path>>(path: P) -> (VecTree, VecTree) {
 
     for line in lines {
         let words = line.split(' ').collect::<Vec<_>>();
-        let (_, id) = words[1].split_once('=').unwrap();
-        let id = id.parse().unwrap();
+        match words[0] {
+            "ADD" => {
+                let (_, id) = words[1].split_once('=').unwrap();
+                let id = id.parse().unwrap();
 
-        let (left_rank, left_symbol) = rank_and_symbol(words[2]);
-        let (right_rank, right_symbol) = rank_and_symbol(words[3]);
+                let (left_rank, left_symbol) = rank_and_symbol(words[2]);
+                let (right_rank, right_symbol) = rank_and_symbol(words[3]);
 
-        let left_node = Node::new(id, left_rank, left_symbol);
-        let right_node = Node::new(id, right_rank, right_symbol);
+                let left_node = Node::new(id, left_rank, left_symbol);
+                let right_node = Node::new(id, right_rank, right_symbol);
 
-        left_tree.add(left_node);
-        right_tree.add(right_node);
+                left_tree.add(left_node);
+                right_tree.add(right_node);
+            }
+            "SWAP" => {
+                let id = words[1].parse::<usize>().unwrap();
+                let (left_node, left_pos) = left_tree.find_by_id(id);
+                let (right_node, right_pos) = right_tree.find_by_id(id);
+                left_tree.vec[left_pos] = Some(right_node);
+                right_tree.vec[right_pos] = Some(left_node);
+            }
+            _ => {
+                panic!("Invalid command {}", words[0]);
+            }
+        }
     }
 
     (left_tree, right_tree)
@@ -53,20 +68,16 @@ fn rank_and_symbol(s: &str) -> (usize, char) {
     (rank.parse().unwrap(), symbol.chars().next().unwrap())
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 struct Node {
-    _id: usize,
+    id: usize,
     rank: usize,
     symbol: char,
 }
 
 impl Node {
     fn new(id: usize, rank: usize, symbol: char) -> Self {
-        Self {
-            _id: id,
-            rank,
-            symbol,
-        }
+        Self { id, rank, symbol }
     }
 }
 
@@ -131,5 +142,16 @@ impl VecTree {
 
     fn has(&self, pos: usize) -> bool {
         pos < self.vec.len() && self.vec[pos].is_some()
+    }
+
+    fn find_by_id(&self, id: usize) -> (Node, usize) {
+        for (pos, node) in self.vec.iter().enumerate() {
+            if let Some(node) = node {
+                if node.id == id {
+                    return (node.clone(), pos);
+                }
+            }
+        }
+        panic!("{id} not found");
     }
 }
