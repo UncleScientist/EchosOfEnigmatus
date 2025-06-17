@@ -2,8 +2,8 @@ use std::{collections::HashSet, fmt::Display};
 
 fn main() {
     println!("Quest 3: The Conical Snail Clock");
-    let lines = aoclib::read_lines("everybody_codes_e1_q03_p1.txt");
 
+    let lines = aoclib::read_lines("everybody_codes_e1_q03_p1.txt");
     let mut device = Device::default();
     for line in lines {
         let (x, y) = line.get_xy();
@@ -13,6 +13,21 @@ fn main() {
         device.step();
     }
     println!("  part 1 = {}", device.value());
+
+    let lines = aoclib::read_lines("everybody_codes_e1_q03_p2.txt");
+    // let lines = aoclib::read_lines("test2_2.txt");
+    let mut device = Device::default();
+    for line in lines {
+        let (x, y) = line.get_xy();
+        device.add(x, y);
+    }
+    let mut bases = Vec::new();
+    let mut nums = Vec::new();
+    for snail in device.snails.iter() {
+        bases.push(snail.0 + snail.1 - 1);
+        nums.push(snail.1 - 1);
+    }
+    println!("  part 2 = {}", crt(&bases, &nums));
 }
 
 #[derive(Debug, Default)]
@@ -77,4 +92,25 @@ impl GetXY for &str {
         let (_, y) = y.split_once('=').unwrap();
         (x.parse().unwrap(), y.parse().unwrap())
     }
+}
+
+// adapted from: https://shainer.github.io/crypto/math/2017/10/22/chinese-remainder-theorem.html
+fn crt(bases: &[i64], nums: &[i64]) -> i64 {
+    let product = bases.iter().product::<i64>();
+    let mut result = 0;
+
+    for (a, n) in nums.iter().zip(bases.iter()) {
+        let b = product / *n;
+        result = (result + *a * b * mod_inverse(b, *n)) % product;
+    }
+
+    result
+}
+
+// adapted from: https://rustp.org/number-theory/modular-inverse/
+fn mod_inverse(n: i64, p: i64) -> i64 {
+    if p <= 1 || aoclib::gcd(n, p) > 1 {
+        return 0;
+    }
+    aoclib::power_mod(1, n, p - 2, p)
 }
