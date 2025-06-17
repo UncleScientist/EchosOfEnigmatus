@@ -28,6 +28,20 @@ fn main() {
         nums.push(snail.1 - 1);
     }
     println!("  part 2 = {}", crt(&bases, &nums));
+
+    let lines = aoclib::read_lines("everybody_codes_e1_q03_p3.txt");
+    let mut device = Device::default();
+    for line in lines {
+        let (x, y) = line.get_xy();
+        device.add(x, y);
+    }
+    let mut bases = Vec::new();
+    let mut nums = Vec::new();
+    for snail in device.snails.iter() {
+        bases.push(snail.0 + snail.1 - 1);
+        nums.push(snail.1 - 1);
+    }
+    println!("  part 3 = {}", crt(&bases, &nums));
 }
 
 #[derive(Debug, Default)]
@@ -110,7 +124,8 @@ fn crt(bases: &[i64], nums: &[i64]) -> i64 {
 // adapted from: https://rustp.org/number-theory/modular-inverse/
 fn mod_inverse(n: i64, p: i64) -> i64 {
     if p <= 1 || aoclib::gcd(n, p) > 1 {
-        return 0;
+        0
+    } else {
+        aoclib::power_mod(1, n, p - 2, p)
     }
-    aoclib::power_mod(1, n, p - 2, p)
 }
